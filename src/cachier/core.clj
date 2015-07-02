@@ -1,15 +1,7 @@
 (ns cachier.core)
 
-;; TODO remove fill fn
-(def data-batch (fn []
-                  (println "Batch started...")
-                  (Thread/sleep 10000)
-                  (println "Batch finished.")
-                  (range 10)))
-
-;; TODO make a fn
-(def cache
-  (atom {:data-batch-fn data-batch
+(defn make-cache [data-batch-fn]
+  (atom {:data-batch-fn data-fn
          :batches-in-progress 0
          :queue (clojure.lang.PersistentQueue/EMPTY)
          :cap 5}))
