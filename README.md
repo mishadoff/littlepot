@@ -20,14 +20,16 @@ Most of APIs return batched data (_like 50 elements in one response_), but in a 
 
 Add dependency
 
+_IN PROGRESS_
+
 ``` clojure
-[com.mishadoff/cashier "0.1.0"]
+[com.mishadoff/cachier "0.1.0"]
 ```
 
 Include it in your namespace
 
 ``` clojure
-(:require [cashier :as c])
+(:require [cachier :as c])
 ```
 
 Create cache
