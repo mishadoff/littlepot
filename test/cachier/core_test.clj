@@ -16,13 +16,14 @@
     (is (every? #(= % :no-data) (take 100 (repeatedly #(hit cache)))))
     ))
 
-;; TODO failing when multiple consumers
 (deftest test-multiple-consumers
-  (let [number-of-consumers 10
+  (let [batch-latency (rand-int 1000)
+        consumer-latency (rand-int 10)
+        number-of-consumers 10
         batches-active (atom 0)
         batch-data-fn (fn []
                         (swap! batches-active inc)
-                        (Thread/sleep 100)
+                        (Thread/sleep batch-latency)
                         (let [data (repeat 1000 1)]
                           (swap! batches-active dec)
                           data))
@@ -34,7 +35,7 @@
                      (loop [ones 0]
                        (if @run
                          (do
-                           (Thread/sleep (rand-int 10))
+                           (Thread/sleep consumer-latency)
                            (let [e (hit cache)]
                              (cond (= e 1) (recur (inc ones))
                                    (= e :no-data) (recur ones)
@@ -46,9 +47,7 @@
     (add-watch batches-active :no-more-than-one
                (fn [_ _ _ new-value]
                  (when (> new-value 1) ;; max parallel batches
-                   (println "ERROR")
-                   (is false)
-                   (throw (IllegalArgumentException.)))))
+                   (is false))))
     ;; kick-off computation
     (doall consumers)
     ;; wait 10 seconds for consumers to work
@@ -56,9 +55,8 @@
     ;; request stop
     (reset! run false)
     ;; wait batches in progress become 0
-    (Thread/sleep 1000)
+    (Thread/sleep batch-latency)
     (is (zero? (:batches-in-progress @cache)))
-    (println "CACHE> " cache)
     (let [consumer-ones (reduce + (map deref consumers))
           total-produced (* 1000 (:batches-done @cache))
           left-in-cache (count (:queue @cache))]

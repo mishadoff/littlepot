@@ -16,8 +16,6 @@
   (let [{:keys [batches-in-progress]} @cache]
     (pos? batches-in-progress)))
 
-
-
 (defn- fill-cache [cache]
   (future
     (let [data ((:data-batch-fn @cache))]
