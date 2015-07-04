@@ -1,9 +1,6 @@
 # TODO
 
-- Tests [1] (_review_)
-- Docs [1] (_review_)
 - Publish [2]
-- Travis CI and friends [2]
 - Plugin to replace data-batch-fn [4]
 - More stats [2]
   - Elements served

@@ -1,4 +1,4 @@
-# littlepot [![Build Status](https://travis-ci.org/mishadoff/littlepot.svg?branch=master)](https://travis-ci.org/mishadoff/littlepot)
+# littlepot [![Build Status](https://travis-ci.org/mishadoff/littlepot.svg?branch=master)](https://travis-ci.org/mishadoff/littlepot) [![Coverage Status](https://coveralls.io/repos/mishadoff/littlepot/badge.svg)](https://coveralls.io/r/mishadoff/littlepot)
 
 > Cook, little pot, cook!
 >
