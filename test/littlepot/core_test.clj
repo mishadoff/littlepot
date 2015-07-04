@@ -1,19 +1,19 @@
-(ns cachier.core-test
+(ns littlepot.core-test
   (:require [clojure.test :refer :all]
-            [cachier.core :refer :all]))
+            [littlepot.core :refer :all]))
 
 (deftest test-auto-fill
   (let [batch-data-fn (fn []
                         (Thread/sleep 1000)
                         (range 10))
-        cache (make-cache batch-data-fn)]
+        pot (make-pot batch-data-fn)]
     ;; trigger data population
-    (is (= :no-data (hit cache)))
+    (is (= :no-data (cook pot)))
     ;; wait to retrieved fully
     (Thread/sleep 1100)
-    (is (= (range 10) (take 10 (repeatedly #(hit cache)))))
+    (is (= (range 10) (take 10 (repeatedly #(cook pot)))))
     ;; next portion is unavailable
-    (is (every? #(= % :no-data) (take 100 (repeatedly #(hit cache)))))
+    (is (every? #(= % :no-data) (take 100 (repeatedly #(cook pot)))))
     ))
 
 (deftest test-multiple-consumers
@@ -27,7 +27,7 @@
                         (let [data (repeat 1000 1)]
                           (swap! batches-active dec)
                           data))
-        cache (make-cache batch-data-fn)
+        pot (make-pot batch-data-fn)
         run (atom true)
         consumer (fn []
                    (future
@@ -36,7 +36,7 @@
                        (if @run
                          (do
                            (Thread/sleep consumer-latency)
-                           (let [e (hit cache)]
+                           (let [e (cook pot)]
                              (cond (= e 1) (recur (inc ones))
                                    (= e :no-data) (recur ones)
                                    :else (throw (IllegalArgumentException.)))))
@@ -56,12 +56,12 @@
     (reset! run false)
     ;; wait batches in progress become 0
     (Thread/sleep batch-latency)
-    (is (zero? (:batches-in-progress @cache)))
+    (is (zero? (:batches-in-progress @pot)))
     (let [consumer-ones (reduce + (map deref consumers))
-          total-produced (* 1000 (:batches-done @cache))
-          left-in-cache (count (:queue @cache))]
-      (println consumer-ones left-in-cache total-produced)
+          total-produced (* 1000 (:batches-done @pot))
+          left-in-pot (count (:queue @pot))]
+      (println consumer-ones left-in-pot total-produced)
       (is (pos? total-produced))
-      (is (= (+ consumer-ones left-in-cache) total-produced))
-      (is (<= left-in-cache 1000))
+      (is (= (+ consumer-ones left-in-pot) total-produced))
+      (is (<= left-in-pot 1000))
       )))

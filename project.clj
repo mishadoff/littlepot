@@ -1,5 +1,5 @@
-(defproject com.mishadoff/cachier "0.1.0"
-  :description "Cachier: Autofilled Cache"
+(defproject com.mishadoff/littlepot "0.1.0"
+  :description "littlepot: Autofilled Cache"
   :url "http://mishadoff.com"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}

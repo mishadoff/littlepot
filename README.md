@@ -1,20 +1,25 @@
-# Cachier
+# littlepot
 
-**Cachier** is a tiny library devoted to transform batched data requests into single method to obtain single element.
+> Cook, little pot, cook!
+>
+>  -- The Magic Porridge Pot, Brothers Grimm
+
+**littlepot** is a tiny library devoted to transform batched data requests into single element request.
 
 ## Rationale
 
-Most of APIs return batched data (_like 50 elements in one response_), but in a lot of cases you need just single element access. General solution to this problem is to send request for batch, get the data, save it somewhere in cache, get the next element from cache, if cache is exhausted send next request, wait, etc. Cachier solves some of these problems.
+Most of APIs return batched data (_like 50 elements in one response_), but in a lot of cases you need just single element access. General solution to this problem is to send request for batch, get the data, save it somewhere in collection, get the next element from collection, if it is exhausted send next request, wait, etc.
+**littlepot** solves some of these problems.
 
-**Storage** It is backed by `clojure.lang.PersistentQueue`, clojure queue implementation, so you don't need to care about efficient storage.
+**Storage.** It is backed by `clojure.lang.PersistentQueue`, clojure queue implementation, so you don't need to care about efficient storage.
 
-**Autofill** It sends request for next batch in a background, when your cached data is close to exhaustion, so the process of cache filling goes automatically and silently. 
+**Autofill.** It sends request for next batch in a background, when your cached data is close to exhaustion, so the process of filling cache goes automatically and silently. 
 
-**Non-blocking** You do not need to wait when data appeares in cache; if something there, return it, if not, return `:no-data`
+**Non-blocking.** You do not need to wait when data appears in cache; if something there, return it, if not, return `:no-data`
 
-**Composable** Having function to retrieve single element `(get-one)` you can easily get fifty elements by calling `(take 50 (repeatedly get-one))`.
+**Composable.** Having function to retrieve single element `(get-one)` you can easily get fifty elements by calling `(take 50 (repeatedly get-one))`.
 
-**Concurrency** It encapsulates whole state in `atom`, so multiple consumers allowed.
+**Concurrency.** It encapsulates whole state in `ref` and uses `STM`, so multiple consumers allowed. Also, guaranteed that at most one batch will be in progress.
 
 ## Usage
 
@@ -23,30 +28,30 @@ Add dependency
 _IN PROGRESS_
 
 ``` clojure
-[com.mishadoff/cachier "0.1.0"]
+[com.mishadoff/littlepot "0.1.0"]
 ```
 
 Include it in your namespace
 
 ``` clojure
-(:require [cachier :as c])
+(:require [com.mishadoff/littlepot :refer :all])
 ```
 
-Create cache
+Create pot
 
 ``` clojure
-(def cache
-  (c/make-cache (fn []
-                  ;; simulate latency
-                  (Thread/sleep (rand-int 1000)
-				  ;; return data
-                  (range 10)))))
+(def pot
+  (make-pot (fn []
+              ;; simulate latency
+              (Thread/sleep (rand-int 1000)
+	          ;; return data
+              (range 10)))))
 ```
 
-Get from cache
+Get from pot
 
 ``` clojure
-(c/hit cache)
+(hit pot)
 ```
 
 ## Future Plans
