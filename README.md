@@ -1,4 +1,4 @@
-# littlepot
+# littlepot [![Build Status](https://travis-ci.org/mishadoff/littlepot.svg?branch=master)](https://travis-ci.org/mishadoff/littlepot)
 
 > Cook, little pot, cook!
 >

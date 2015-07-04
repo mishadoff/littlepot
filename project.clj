@@ -7,7 +7,8 @@
   :main littlepot.core
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.1"]
                              [lein-kibit "0.1.2"]
-                             [lein-bikeshed "0.2.0"]]}}
+                             [lein-bikeshed "0.2.0"]
+                             [lein-cloverage "1.0.6"]]}}
   
   :aliases {"build" ["do"
                      ["clean"]
