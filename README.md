@@ -51,7 +51,9 @@ Create pot
 Get from pot
 
 ``` clojure
-(hit pot)
+(hit pot) ;; => :no-data
+;; wait 1 second
+(hit pot) ;; => 0
 ```
 
 ## Future Plans
