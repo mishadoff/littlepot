@@ -45,10 +45,11 @@
                                  :else (throw (IllegalArgumentException.)))))
                            ones))))
           ;; track no more then 1 active batch
+          invalid-active-batches (atom 0)
           _ (add-watch batches-active :no-more-than-one
                        (fn [_ _ _ new-value]
-                         ;; FIXME wararge test cases is bad
-                         (is (<= new-value 1))))
+                         (when (> new-value 1)
+                           (swap! invalid-active-batches inc))))
           ;; start consumers
           consumers (doall (take number-of-consumers (repeatedly consumer)))]
       ;; wait 10 seconds for consumers to work
@@ -58,6 +59,8 @@
       ;; wait batches in progress become 0
       (Thread/sleep batch-latency)
       (is (zero? (:batches-in-progress @pot)))
+      ;; no parallel batches detected
+      (is (zero? @invalid-active-batches))
       (let [consumer-ones (reduce + (map deref consumers))
             total-produced (* 1000 (:batches-done @pot))
             left-in-pot (count (:queue @pot))]
