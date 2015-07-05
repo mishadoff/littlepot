@@ -47,6 +47,7 @@
           ;; track no more then 1 active batch
           _ (add-watch batches-active :no-more-than-one
                        (fn [_ _ _ new-value]
+                         ;; FIXME wararge test cases is bad
                          (is (<= new-value 1))))
           ;; start consumers
           consumers (doall (take number-of-consumers (repeatedly consumer)))]
@@ -65,3 +66,27 @@
         (is (= (+ consumer-ones left-in-pot) total-produced))
         (is (<= left-in-pot 1000))
         ))))
+
+(deftest test-optionals
+  (testing "Test cap"
+    (let [batch-data-fn (fn []
+                          (Thread/sleep 100)
+                          (range 10))
+          pot (make-pot batch-data-fn :cap 1)]
+      ;; trigger pot cooking
+      (is (= :no-data (cook pot)))
+      ;; wait to fill
+      (Thread/sleep 200)
+      ;; first 9 values available
+      (is (= (range 9) (take 9 (repeatedly #(cook pot)))))
+      ;; there is only one left in pot
+      (is (= 1 (count (:queue @pot))))
+      ;; one batch was done and no one in progress
+      (is (= 1 (:batches-done @pot)))
+      (is (= 0 (:batches-in-progress @pot)))
+      ;; retrieve last value and trigger cooking
+      (is (= 9 (cook pot)))
+      (Thread/sleep 200)
+      (is (= 2 (:batches-done @pot)))
+      (is (= (range 10) (take 10 (repeatedly #(cook pot)))))))
+  )

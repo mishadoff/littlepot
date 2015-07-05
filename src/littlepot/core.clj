@@ -1,16 +1,23 @@
 (ns littlepot.core)
 
-(defn- pot-exhausted?
+(defn- pot-under-cap?
   "Check whether data left in pot less than specified cap."
   [pot]
   (let [{:keys [cap queue]} @pot]
-    (< (count queue) cap)))
+    (<= (count queue) cap)))
 
 (defn- active-batch?
   "Check whether at least one active batch."
   [pot]
   (let [{:keys [batches-in-progress]} @pot]
     (pos? batches-in-progress)))
+
+(defn- pot-start-progress
+  "Increment number of active batches."
+  [pot]
+  (dosync
+   (alter pot (fn [pot-map]
+                (update-in pot-map [:batches-in-progress] inc)))))
 
 (defn- fill-pot
   "Returns future which retrieves data batch and adds it to the pot."
@@ -37,20 +44,16 @@
         :batches-in-progress 0
         :batches-done 0
         :queue (clojure.lang.PersistentQueue/EMPTY)
-        :cap 10}))
+        :cap cap}))
 
 (defn cook
   "Retrieves data from pot immediately.
   If no data available, returns :no-data."
   [pot]
   (dosync
-   (when (and (pot-exhausted? pot)
+   (when (and (pot-under-cap? pot)
               (not (active-batch? pot)))
-     ;; start progress batch
-     (alter pot
-            (fn [pot-map]
-              (update-in pot-map [:batches-in-progress] inc)))
-     ;; run background process to fill the data
+     (pot-start-progress pot)
      (fill-pot pot))
    (let [{:keys [queue cap]} @pot]
      (if-not (empty? queue)
