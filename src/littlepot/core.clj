@@ -12,6 +12,11 @@
   (let [{:keys [batches-in-progress]} @pot]
     (pos? batches-in-progress)))
 
+(defn- exhausted?
+  "Indicates that pot can not produce data anymore."
+  [pot]
+  (:exhausted @pot))
+
 (defn- pot-start-progress
   "Increment number of active batches."
   [pot]
@@ -23,14 +28,38 @@
   "Returns future which retrieves data batch and adds it to the pot."
   [pot]
   (future
-    (let [data ((:data-batch-fn @pot))]
+    (let [[data status]
+          (try [((:data-batch-fn @pot)) :success]
+               (catch Exception e ["error" :failed]))]
       (dosync
-       (alter pot
-              (fn [pot-map]
-                (-> pot-map
-                    (update-in [:queue] (fn [q] (into q data)))
-                    (update-in [:batches-in-progress] dec)
-                    (update-in [:batches-done] inc))))))))
+       (cond
+         ;; request succesfull and data available
+         (and (= :success status) (not (empty? data)))
+         (alter pot
+                (fn [pot-map]
+                  (-> pot-map
+                      (update-in [:queue] (fn [q] (into q data)))
+                      (update-in [:batches-in-progress] dec)
+                      (update-in [:batches-done] inc))))
+         ;; request succesful but no data
+         (and (= :success status) (empty? data))
+         (alter pot
+                (fn [pot-map]
+                  (-> pot-map
+                      (update-in [:batches-in-progress] dec)
+                      (update-in [:batches-done] inc)
+                      (update-in [:exhausted] true))))
+         ;; some error occures
+         (= status :failed)
+         (alter pot
+                (fn [pot-map]
+                  (-> pot-map
+                      (update-in [:batches-in-progress] dec)
+                      (update-in [:batches-done] inc)
+                      (update-in [:last-error] data)
+                      (update-in [:exhausted] true))))
+         :else (throw (IllegalArgumentException. "Invalid State"))
+         )))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Public API ;;;;;;;;;;;;;;;;;;;;;;
@@ -44,7 +73,10 @@
         :batches-in-progress 0
         :batches-done 0
         :queue (clojure.lang.PersistentQueue/EMPTY)
-        :cap cap}))
+        :cap cap
+        :last-error nil
+        :exhausted nil
+        }))
 
 (defn cook
   "Retrieves data from pot immediately.
@@ -52,14 +84,21 @@
   [pot]
   (dosync
    (when (and (pot-under-cap? pot)
-              (not (active-batch? pot)))
+              (not (active-batch? pot))
+              (not (exhausted? pot)))
      (pot-start-progress pot)
      (fill-pot pot))
    (let [{:keys [queue cap]} @pot]
-     (if-not (empty? queue)
+     (cond
+       ;; pot has data
+       (not (empty? queue))
        (let [e (peek queue)]
          (alter pot (fn [pot-map]
                       (update-in pot-map [:queue] pop)))
          e)
-       :no-data
+       ;; pot has no data and it is not produce anything
+       (and (empty? queue) (exhausted? pot))
+       :exhausted
+       ;; data appears soon
+       :else :no-data
        ))))

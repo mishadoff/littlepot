@@ -5,17 +5,53 @@
 (deftest test-auto-fill
   (testing "Default littlepot functionality"
     (let [batch-data-fn (fn []
-                          (Thread/sleep 1000)
+                          (Thread/sleep 100)
                           (range 10))
           pot (make-pot batch-data-fn)]
       ;; trigger data population
       (is (= :no-data (cook pot)))
       ;; wait to retrieved fully
-      (Thread/sleep 1100)
+      (Thread/sleep 200)
       (is (= (range 10) (take 10 (repeatedly #(cook pot)))))
       ;; next portion is unavailable
       (is (every? #(= % :no-data) (take 100 (repeatedly #(cook pot)))))
       )))
+
+(deftest test-exhaustion
+  (testing "Only three batches of data available."
+    (let [number-of-batches (atom 3)
+          batch-data-fn (fn []
+                          (when (pos? @number-of-batches)
+                            (Thread/sleep 100)
+                            (swap! number-of-batches dec)
+                            (range 10)))
+          pot (make-pot batch-data-fn)]
+      ;; trigger data population
+      (is (= :no-data (cook pot)))
+      (dotimes [batch-num 3]
+        ;; wait to retrieved fully
+        (Thread/sleep 200)
+        (is (= (range 10) (take 10 (repeatedly #(cook pot)))))
+        ;; next portion is unavailable
+        (if (< batch-num 3)
+          (is (every? #(= % :no-data)
+                      (take 20 (repeatedly #(cook pot)))))
+          (is (every? #(= % :exhausted)
+                      (take 20 (repeatedly #(cook pot)))))
+          )))))
+
+(deftest test-error-no-batches
+  (testing "Provided batch function throws error"
+    (let [batch-data-fn (fn [] 
+                          (Thread/sleep 100)
+                          (/ 1 0))
+          pot (make-pot batch-data-fn)]
+      ;; trigger data population
+      (is (= :no-data (cook pot)))
+      (Thread/sleep 200)
+      (is (every? #(= % :exhausted) (take 20 (repeatedly #(cook pot)))))
+      (is (not (nil? (:last-error @pot)))))))
+
 
 (deftest test-multiple-consumers
   (testing "Simulate multiple consumers accessing one pot"
