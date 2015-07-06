@@ -42,7 +42,7 @@
 
 (deftest test-error-no-batches
   (testing "Provided batch function throws error"
-    (let [batch-data-fn (fn [] 
+    (let [batch-data-fn (fn []
                           (Thread/sleep 100)
                           (/ 1 0))
           pot (make-pot batch-data-fn)]

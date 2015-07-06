@@ -34,7 +34,7 @@
       (dosync
        (cond
          ;; request succesfull and data available
-         (and (= :success status) (not (empty? data)))
+         (and (= :success status) (seq data))
          (alter pot
                 (fn [pot-map]
                   (-> pot-map
@@ -92,7 +92,7 @@
    (let [{:keys [queue cap]} @pot]
      (cond
        ;; pot has data
-       (not (empty? queue))
+       (seq queue)
        (let [e (peek queue)]
          (alter pot (fn [pot-map]
                       (update-in pot-map [:queue] pop)))
