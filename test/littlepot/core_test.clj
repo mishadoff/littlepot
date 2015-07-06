@@ -11,7 +11,7 @@
       ;; trigger data population
       (is (= :no-data (cook pot)))
       ;; wait to retrieved fully
-      (Thread/sleep 200)
+      (Thread/sleep 500)
       (is (= (range 10) (take 10 (repeatedly #(cook pot)))))
       ;; next portion is unavailable
       (is (every? #(= % :no-data) (take 100 (repeatedly #(cook pot)))))
@@ -30,7 +30,7 @@
       (is (= :no-data (cook pot)))
       (dotimes [batch-num 3]
         ;; wait to retrieved fully
-        (Thread/sleep 200)
+        (Thread/sleep 500)
         (is (= (range 10) (take 10 (repeatedly #(cook pot)))))
         ;; next portion is unavailable
         (if (< batch-num 2)
@@ -48,7 +48,7 @@
           pot (make-pot batch-data-fn)]
       ;; trigger data population
       (is (= :no-data (cook pot)))
-      (Thread/sleep 200)
+      (Thread/sleep 500)
       (is (every? #(= % :exhausted) (take 20 (repeatedly #(cook pot)))))
       (is (not (nil? (:last-error @pot)))))))
 
