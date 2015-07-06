@@ -48,7 +48,7 @@
                   (-> pot-map
                       (update-in [:batches-in-progress] dec)
                       (update-in [:batches-done] inc)
-                      (update-in [:exhausted] true))))
+                      (assoc :exhausted true))))
          ;; some error occures
          (= status :failed)
          (alter pot
@@ -56,8 +56,8 @@
                   (-> pot-map
                       (update-in [:batches-in-progress] dec)
                       (update-in [:batches-done] inc)
-                      (update-in [:last-error] data)
-                      (update-in [:exhausted] true))))
+                      (assoc :last-error data)
+                      (assoc :exhausted true))))
          :else (throw (IllegalArgumentException. "Invalid State"))
          )))))
 
@@ -86,6 +86,7 @@
    (when (and (pot-under-cap? pot)
               (not (active-batch? pot))
               (not (exhausted? pot)))
+     ;; FIXME move progress to fill pot?
      (pot-start-progress pot)
      (fill-pot pot))
    (let [{:keys [queue cap]} @pot]

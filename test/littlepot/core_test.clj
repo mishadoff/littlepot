@@ -33,7 +33,7 @@
         (Thread/sleep 200)
         (is (= (range 10) (take 10 (repeatedly #(cook pot)))))
         ;; next portion is unavailable
-        (if (< batch-num 3)
+        (if (< batch-num 2)
           (is (every? #(= % :no-data)
                       (take 20 (repeatedly #(cook pot)))))
           (is (every? #(= % :exhausted)
