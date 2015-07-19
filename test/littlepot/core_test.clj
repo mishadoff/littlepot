@@ -73,6 +73,7 @@
         (if (< batch-num 2)
           (is (every? #(= % :no-data)
                       (take 20 (repeatedly #(cook pot)))))
+          (Thread/sleep 200)
           (is (every? #(= % :exhausted)
                       (take 20 (repeatedly #(cook pot)))))
           )))))
