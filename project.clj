@@ -1,7 +1,7 @@
 (defproject com.mishadoff/littlepot "0.1.1"
   :description "littlepot: Autofilled Cache"
   :url "http://mishadoff.com"
-  :license {:name "Eclipse Public License"
+  :license {:name "Eclipse Public License 1.0"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]]
   :main littlepot.core
