@@ -70,10 +70,10 @@
         (Thread/sleep 500)
         (is (= (range 10) (take 10 (repeatedly #(cook pot)))))
         ;; next portion is unavailable
+        (Thread/sleep 200)
         (if (< batch-num 2)
           (is (every? #(= % :no-data)
                       (take 20 (repeatedly #(cook pot)))))
-          (Thread/sleep 200)
           (is (every? #(= % :exhausted)
                       (take 20 (repeatedly #(cook pot)))))
           )))))
