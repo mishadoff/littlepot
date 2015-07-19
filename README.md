@@ -56,6 +56,9 @@ Get from pot
 (cook pot) ;; => 0
 ```
 
+For advanced usage and some real use cases,
+go to [tutorial](doc/tutorial.md)
+
 ## Future Plans
 
 Occasionally, some features from [TODO.md](doc/todo.md) will be added.

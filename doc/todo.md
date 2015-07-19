@@ -1,12 +1,7 @@
 # TODO
 
-- Publish [2]
-- Plugin to replace data-batch-fn [4]
-- More stats [2]
-  - Elements served
-- Completely Exhausted Requests [2]
-- Exception handling [?]
 - Use cases doc [3]
+- Publish [2]
 - API Usage stress [2]
 
 # Future

@@ -29,8 +29,8 @@
   [pot]
   (future
     (let [[data status]
-          (try [((:data-batch-fn @pot)) :success]
-               (catch Exception e ["error" :failed]))]
+          (try [(apply (:data-batch-fn @pot) (:args @pot)) :success]
+               (catch Exception e [e :failed]))]
       (dosync
        (cond
          ;; request succesfull and data available
@@ -40,7 +40,8 @@
                   (-> pot-map
                       (update-in [:queue] (fn [q] (into q data)))
                       (update-in [:batches-in-progress] dec)
-                      (update-in [:batches-done] inc))))
+                      (update-in [:batches-done] inc)
+                      (update-in [:args] (:next-args-fn pot-map)))))
          ;; request succesful but no data
          (and (= :success status) (empty? data))
          (alter pot
@@ -67,11 +68,16 @@
 
 (defn make-pot
   "Constructs a pot, queue-backed ref, which autofilled when exhausted."
-  [data-batch-fn & {:keys [cap]
-                    :or {cap 10}}]
+  [data-batch-fn & {:keys [cap args next-args-fn]
+                    :or {cap 10
+                         args []
+                         next-args-fn identity}}]
   (ref {:data-batch-fn data-batch-fn
+        :args args
+        :next-args-fn next-args-fn
         :batches-in-progress 0
         :batches-done 0
+        :elements-returned 0
         :queue (clojure.lang.PersistentQueue/EMPTY)
         :cap cap
         :last-error nil
@@ -95,7 +101,9 @@
        (seq queue)
        (let [e (peek queue)]
          (alter pot (fn [pot-map]
-                      (update-in pot-map [:queue] pop)))
+                      (-> pot-map
+                          (update-in [:queue] pop)
+                          (update-in [:elements-returned] inc))))
          e)
        ;; pot has no data and it is not produce anything
        (and (empty? queue) (exhausted? pot))

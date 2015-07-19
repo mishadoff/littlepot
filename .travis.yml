@@ -4,6 +4,5 @@ script: lein2 build
 after_script:
   - bash -ex resources/coveralls.sh
 jdk:
-  - openjdk6
   - openjdk7
   - oraclejdk7

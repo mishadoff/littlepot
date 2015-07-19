@@ -17,6 +17,45 @@
       (is (every? #(= % :no-data) (take 100 (repeatedly #(cook pot)))))
       )))
 
+(deftest test-next-args-fn
+  (testing "Advance args function"
+    (let [batch-data-fn (fn [page]
+                          (Thread/sleep 100)
+                          (get {1 [1 2 3 4 5]
+                                2 [2 4 6 8 10]
+                                3 [3 6 9 12 15]}
+                               page []))
+          args [1]
+          next-args-fn (fn [[v]] [(inc v)])
+          pot (make-pot batch-data-fn
+                        :cap 1
+                        :args args
+                        :next-args-fn next-args-fn)]
+      ;; trigger data population
+      (is (= :no-data (cook pot)))
+      ;; wait to retrieved fully
+      (Thread/sleep 300)
+      ;; ask for the first page
+      (is (= [1 2 3 4 5] (take 5 (repeatedly #(cook pot)))))
+      ;; next portion still cooking
+      (is (every? #(= % :no-data) (take 10 (repeatedly #(cook pot)))))
+      (Thread/sleep 300)
+      ;; ask for the 2nd page
+      (is (= [2 4 6 8 10] (take 5 (repeatedly #(cook pot)))))
+      ;; next portion still cooking
+      (is (every? #(= % :no-data) (take 10 (repeatedly #(cook pot)))))
+      (Thread/sleep 300)
+      ;; ask for the 3rd page
+      (is (= [3 6 9 12 15] (take 5 (repeatedly #(cook pot)))))
+      ;; next portion still cooking
+      (is (every? #(= % :no-data) (take 10 (repeatedly #(cook pot)))))
+      (Thread/sleep 300)
+      ;; it's actually exhausted
+      (is (every? #(= % :exhausted) (take 10 (repeatedly #(cook pot)))))
+
+      
+      )))
+
 (deftest test-exhaustion
   (testing "Only three batches of data available."
     (let [number-of-batches (atom 3)
@@ -102,6 +141,7 @@
             left-in-pot (count (:queue @pot))]
         (println consumer-ones left-in-pot total-produced)
         (is (pos? total-produced))
+        (is (= consumer-ones (:elements-returned @pot)))
         (is (= (+ consumer-ones left-in-pot) total-produced))
         (is (<= left-in-pot 1000))
         ))))
