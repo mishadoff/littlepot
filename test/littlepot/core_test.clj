@@ -52,8 +52,6 @@
       (Thread/sleep 300)
       ;; it's actually exhausted
       (is (every? #(= % :exhausted) (take 10 (repeatedly #(cook pot)))))
-
-      
       )))
 
 (deftest test-exhaustion
