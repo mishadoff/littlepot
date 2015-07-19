@@ -1,4 +1,4 @@
-(defproject com.mishadoff/littlepot "0.1.0"
+(defproject com.mishadoff/littlepot "0.1.1"
   :description "littlepot: Autofilled Cache"
   :url "http://mishadoff.com"
   :license {:name "Eclipse Public License"
