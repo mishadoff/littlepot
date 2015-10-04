@@ -32,7 +32,7 @@ Add dependency
 Include it in your namespace
 
 ``` clojure
-(:require [com.mishadoff/littlepot :refer :all])
+(:require [littlepot.core :refer :all])
 ```
 
 Create pot
